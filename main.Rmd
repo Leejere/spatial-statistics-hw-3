@@ -97,3 +97,37 @@ Before running a logistic regression, statisticians often carry out a series of 
 **Cross-tabulation between the dependent variable and categorical predictors**. We can cross-tabulate all the observations into groups, each group being a combination of the true/false value of the dependent and a class of the predictor. A *chi-square test* is performed. Its null hypothesis is that there is no significant difference in terms of outcome (dependent variable) between the classes, as opposed to the alternative hypothesis of there being a significant difference. If the null hypothesis stands, then the chi-square value should be of chi-square distribution. If the p-value of the observed chi-square is reasonably small (i.e., smaller than 0.05), then we may reject the null hypothesis for the alternative hypothesis and state that the predictor is indeed correlated with the dependent variable.
 
 **Independent-sample T-tests**. To examine the correlation between dependent variable and a continuous predictor, we may calculate the mean value of the predictor by the binary outcome. The true or false of the binary outcome essentially divides all the observations into two samples, and then we can test whether there is a significant difference between the two samples through an independent-sample T-test. The null hypothesis for this test is that there is no significant difference between the two samples. If such hypothesis stands, then the difference of the two sample means will be of T-distribution. If the observed T-score is associated with a p-value lower than 0.05, then we reject the null hypothesis for the alternative hypothesis that there is significant difference between the two samples, and therefore the predictor is correlated with the dependent variable.
+
+# Results
+
+```{r import}
+
+# Import data
+df = read.csv("data/Logistic Regression Data.csv") %>%
+  rename(record_id = CRN, # Crash record number
+         drink = DRINKING_D, # Drinking driver indicator (boolean)
+         fatal_injury = FATAL_OR_M, # Crash resulted in fatality or major injury (boolean)
+         overturned = OVERTURNED, # Crash involved an overturned vehicle (boolean)
+         phone = CELL_PHONE, # Driver was using a cell phone (boolean)
+         speeding = SPEEDING, # Crash involved speeding car (boolean)
+         aggressive = AGGRESSIVE, # Crash involved aggressive driving (boolean)
+         teen_driver = DRIVER1617, # Car involved at least one driver who was 16 or 17 years old (boolean)
+         senior_driver = DRIVER65PLUS, # Crash involved at least one driver was was at least 65 years old (boolean)
+         pct_bachelor = PCTBACHMOR, # Pct residents in CBG with bachelor's degree or higher
+         md_hh_income = MEDHHINC, # Median houshold income of CBG
+        )
+
+# Dictionary of var names to their real names
+names_dict = 
+  c("record_id" = "Record ID",
+    "drink" = "Involved drnking driver",
+    "fatal_injury" = "Involved fatality or major injury",
+    "overturned" = "Involved overturned vehicle",
+    "speeding" = "Involved speeding car",
+    "aggressive" = "Involved aggressive driving",
+    "tean_driver" = "Involved driver 16 to 17 years old",
+    "senior_driver" = "Involved driver 65 years or older",
+    "pct_bachelor" = "Pct residents in CBG w/ at least bachelor's degree",
+    "md_hh_income" = "Median houshold income of CBG")
+
+```
