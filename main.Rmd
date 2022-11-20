@@ -1,0 +1,34 @@
+---
+title: "Predicting Car Crashes Caused by Alcohol Using Logistic Regression"
+author: "Li, Jie; Wang, Yan; Zhang, Yihan"
+date: "11/2o/2022"
+output:
+  html_document: 
+    toc: yes
+    toc_float: yes
+    code_folding: hide
+    theme: paper
+    fig_caption: yes
+  pdf_document: default
+---
+
+<link rel="stylesheet" href="css/styles.css">
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, cache=FALSE, results="hide", message=FALSE, warning=FALSE)
+```
+
+```{r set-up}
+
+# Several libraries and util functions from my GitHub
+source("https://raw.githubusercontent.com/Leejere/r-setup/main/r_setup.r")
+```
+
+# Introduction
+
+-   State the problem, the importance of the problem, and the setting of the analysis (Philadelphia).
+-   Speculate as to **why** the predictors we are using might be associated with the dependent variable.
+-   Indicate the tool (R).
+
+# Methods
+

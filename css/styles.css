@@ -1,0 +1,23 @@
+p.caption {
+  font-size: 0.8em;
+  text-align: center;
+  font-weight: normal;
+}
+
+caption {
+  color: grey;
+  font-size: 0.8em;
+} 
+
+
+body{
+  font-size: 11pt;
+}
+
+td{
+  font-size: 9pt;
+}
+th{
+  font-size: 0.8em;
+  color: grey;
+}
