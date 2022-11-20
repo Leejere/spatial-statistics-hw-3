@@ -32,3 +32,17 @@ source("https://raw.githubusercontent.com/Leejere/r-setup/main/r_setup.r")
 
 # Methods
 
+-   Explain the problems with using OLS regression when the dependent variable is binary.
+
+In an OLS regression, we dealt with dependent variables whose values were continuous with a reasonably large range, so that the model could be explained as one unit’s change of a predictor correlating with how many units’ change of the dependent variable (holding other variables constant). However, this explanation no longer applies when the dependent variable is binary, as it only takes values of either 0 or 1.
+
+The logistic regression method works around this problem by turning the $y$ in the equation from *binary* to continuous *probability*. In this way, we may say that one unit’s change of a predictor is correlated with certain increase or decrease in the probability of the dependent variable being “True”. However, this brings another problem, as probability only ranges from 0 to 1, whereas the OLS regression is a linear model in which the $y$ should have no lower and upper bounds. To solve this problem, we can construct a new variable, $ln\frac{p}{1-p}$, in which $p$ is the probability of the dependent variable being “True” ($p=P(Y=1)$). The ratio of “True” probability against “False” probability is called the *odds*. By wrapping the *odds* inside of a log-transform, we have successfully turned the scope of $y$ to from $-\infty$ to $\infty$. The final equation for the logistic model is written as follows:
+
+$$
+ln(\frac{p}{1-p})=\beta_0 + \beta_1x_1 + \beta_2x_2 + ... + \beta_nx_n + \epsilon
+$$
+
+where 
+
+
+
