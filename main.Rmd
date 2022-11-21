@@ -86,7 +86,7 @@ Like the OLS model, the logistic model also has a number of assumptions required
 -   The dependent variable is binary.
 -   The observations are independent from each other.
 -   There is no severe multi-collinearity among the predictors.
--   Large sample size is required, as the model is estimated through the Maximum Likelihood Estimation method.
+-   Large samples size is required, as the model is estimated through the Maximum Likelihood Estimation method.
 
 Unlike the OLS, however, the logistic regression model makes no assumption that the relationship between the dependent variable and each predictor is normal. It does not require homoscedasticity, nor the normality of the distribution of residuals.
 
@@ -97,11 +97,11 @@ Before running a logistic regression, statisticians often carry out a series of 
 
 **Cross-tabulation between the dependent variable and categorical predictors**. We can cross-tabulate all the observations into groups, each group being a combination of the true/false value of the dependent and a class of the predictor. A *chi-square test* is performed. Its null hypothesis is that there is no significant difference in terms of outcome (dependent variable) between the classes, as opposed to the alternative hypothesis of there being a significant difference. If the null hypothesis stands, then the chi-square value should be of chi-square distribution. If the p-value of the observed chi-square is reasonably small (i.e., smaller than 0.05), then we may reject the null hypothesis for the alternative hypothesis and state that the predictor is indeed correlated with the dependent variable.
 
-**Independent-sample T-tests**. To examine the correlation between dependent variable and a continuous predictor, we may calculate the mean value of the predictor by the binary outcome. The true or false of the binary outcome essentially divides all the observations into two samples, and then we can test whether there is a significant difference between the two samples through an independent-sample T-test. The null hypothesis for this test is that there is no significant difference between the two samples. If such hypothesis stands, then the difference of the two sample means will be of T-distribution. If the observed T-score is associated with a p-value lower than 0.05, then we reject the null hypothesis for the alternative hypothesis that there is significant difference between the two samples, and therefore the predictor is correlated with the dependent variable.
+**Independent-samples T-tests**. To examine the correlation between dependent variable and a continuous predictor, we may calculate the mean value of the predictor by the binary outcome. The true or false of the binary outcome essentially divides all the observations into two samples, and then we can test whether there is a significant difference between the two samples through an independent-samples T-test. The null hypothesis for this test is that there is no significant difference between the two samples. If such hypothesis stands, then the difference of the two sample means will be of T-distribution. If the observed T-score is associated with a p-value lower than 0.05, then we reject the null hypothesis for the alternative hypothesis that there is significant difference between the two samples, and therefore the predictor is correlated with the dependent variable.
 
 # Data exploration
 
--   Import data
+Before performing the logistic regressions, we first explored the relationship between the predictors and the dependent variable, and between the predictors themselves. The below code chunk imports the data and sets up the variable names for the imported data frame.
 
 ```{r import}
 
@@ -136,21 +136,38 @@ names_dict =
 
 ```
 
--   Tabulations
+## The dependent variable
+
+Let's first take a quick look at the dependent variable through Table 1. 5.7% of all the crashes in the data set involved a drinking driver and therefore possibly caused by drinking. The other 94.3% of the crashes did not involve a drinking driver.
 
 ```{r dv-tab, results="asis"}
 
 # Tabulation of the dependent variable
 table(df$drink) %>%
   as.data.frame() %>%
-  mutate("Drinking Status" = ifelse(Var1 == 0, "Involved drinking driver",
+  mutate("Drinking Status" = ifelse(Var1 == 1, "Involved drinking driver",
                                   "Did not involve drinking driver")) %>%
   dplyr::select("Drinking Status", Freq) %>%
   mutate(Proportion = (Freq * 100 / sum(Freq)) %>% round(1) %>% paste0("%")) %>%
   kable(caption = "Table 1. Tabulation of the dependent variable") %>%
   kable_classic(full_width=FALSE, html_font="Cambria")
 ```
-```{r cross-tabs, results="asis"}
+
+## The binary predictors
+
+In this section, we explored the relationship between the dependent variable and the 7 *binary* predictors:
+
+-   `fatal_injury`: involved fatality or major injuries.
+-   `overturned`: involved overturned vehicle.
+-   `phone`: involved cell-phone usage.
+-   `speeding`: involved speeding vehicle.
+-   `aggressive`: involved aggressive driving.
+-   `teen_driver`: involved driver of 16 to 17 years old.
+-   `senior_driver`: involved driver 65 years or older.
+
+The below two code chunks performs a cross-tabulation between the dependent variable and the 7 binary predictors, as shown in Table 2. The percentages indicate what percentages of crashes (either involving a drinking driver or not) are "true" in their respective predictors. The last column is the p-value corresponding to the $\chi^2$ test of the dependent variable and each predictors.
+
+```{r cross-tabs, message=FALSE}
 
 # Sum all counts and percentages
 sum_table = df %>%
@@ -191,9 +208,7 @@ output = output %>% dplyr::select(-var_name)
 
 ```
 
--   Chi-squares
-
-```{r chi-squares}
+```{r chi-squares, results="asis"}
 
 var_list = c("fatal_injury", "overturned", "phone", "speeding", "aggressive",
              "teen_driver", "senior_driver")
@@ -215,9 +230,17 @@ output %>%
   kable_classic(full_width=FALSE, html_font="Cambria")
 ```
 
--   Tabulation for continuous variables
+The chi-square test results show that apart from cell-phone usage, all the other binary predictors are significant correlated with the dependent variable.
 
-```{r tab-continuous}
+## The continuous variables
+
+Next, we explored the dependent variable and the two continuous predictors:
+-   `pct_bachelor`: percentage of residents with a bachelor's degree or higher in the census block group (CBG) where the crash took place.
+-   `md_hh_income`: median houshold income of the census block group (CBG) where the crash took place.
+
+The below two code chunks perform a tabulation between the dependent variable and the two predictors (Table 3.), summarizing the mean and standard deviation of each predictor, categorized by the dependent variable (involved a drinking driver or not). The last column shows the p-value from the independent-samples T-Test of each predictor by the dependent variable.
+
+```{r tab-continuous, message=FALSE}
 sum_table_2 = df %>%
   mutate(md_hh_income = md_hh_income / 1000) %>%
   dplyr::select(drink, pct_bachelor, md_hh_income) %>%
@@ -259,9 +282,7 @@ rownames(output_2) = names_dict[output_2$var_name] %>% unname()
 output_2 = output_2 %>% dplyr::select(-var_name)
 ```
 
--   Independent sample T-Tests for the continuous variables
-
-```{r ind-sample-ttest}
+```{r ind-sample-ttest, results="asis"}
 
 test = t.test(df$pct_bachelor ~ df$drink)
 test$p.value
@@ -286,9 +307,15 @@ output_2 %>%
   kable_classic(full_width=FALSE, html_font="Cambria")
 ```
 
--   Check for multi-collinearity
+The table shows that both independent-samples T-tests produced a p-value greater than 0.05, meaning that the two continuous variables themselves are not significantly correlated with the dependent variable.
 
-```{r check-collin}
+## Checking for multi-collinearity among the predictors
+
+This section tests whether and how the predictors are inter-correlated with each other, although logistic regressions generally do not require for non-collinearity.
+
+Table 4. shows the correlation coefficient ($r$) between each pair of predictors, and Table 5. presents the p-values.
+
+```{r check-collin, results="asis"}
 
 rcorr = 
   df %>% 
@@ -309,16 +336,18 @@ rownames(r_matrix) = var_names
 rownames(p_matrix) = var_names
 
 r_matrix %>%
-  kable(caption = "Table 3. Correlation matrix of predictors") %>%
+  kable(caption = "Table 4. Correlation matrix of predictors") %>%
   kable_classic(html_font="Cambria")
 
 ```
 
-```{r}
+```{r check-collin-p, results="asis"}
 
 p_matrix %>%
-  kable(caption = "Table 4. Correlation matrix (p-values) of predictors") %>%
+  kable(caption = "Table 5. Correlation matrix (p-values) of predictors") %>%
   kable_classic(html_font="Cambria")
 ```
 
-# Results
+The tables above shows that there is some collinearity between some predictors. However, the correlations among the predictors are very weak.
+
+# Logistic Regression Results
