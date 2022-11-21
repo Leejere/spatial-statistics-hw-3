@@ -22,6 +22,7 @@ knitr::opts_chunk$set(echo=TRUE, cache=FALSE, results="hide", message=FALSE, war
 
 # Several libraries and util functions from my GitHub
 source("https://raw.githubusercontent.com/Leejere/r-setup/main/r_setup.r")
+library(gmodels)
 ```
 
 # Introduction
@@ -187,13 +188,137 @@ output = sum_table_sum %>%
 # Organize final output suitable for kable
 rownames(output) = names_dict[output$var_name] %>% unname()
 output = output %>% dplyr::select(-var_name)
-colnames(output) = c("N", "%", "N", "%")
+
+```
+
+-   Chi-squares
+
+```{r chi-squares}
+
+var_list = c("fatal_injury", "overturned", "phone", "speeding", "aggressive",
+             "teen_driver", "senior_driver")
+chisq_list = c()
+for(var in var_list) {
+  this_test = chisq.test(df[[var]], df$drink)
+  this_p = this_test$p.value %>% round(3)
+  chisq_list = c(chisq_list, this_p)
+}
+
+output = output %>% cbind(chisq_list) %>%
+  rename("Chi-Square p-value" = chisq_list)
+
+colnames(output) = c("N", "%", "N", "%", "Chi-square p-value")
 
 output %>%
   kable(caption = "Table 2. Cross tabulations of the dependent variable and binary predictors") %>%
-  add_header_above(c(" ", "No alcohol involved" = 2, "Alcohol involved" = 2)) %>%
+  add_header_above(c(" ", "No alcohol involved" = 2, "Alcohol involved" = 2, "Chi-square test" = 1)) %>%
   kable_classic(full_width=FALSE, html_font="Cambria")
 ```
 
+-   Tabulation for continuous variables
+
+```{r tab-continuous}
+sum_table_2 = df %>%
+  mutate(md_hh_income = md_hh_income / 1000) %>%
+  dplyr::select(drink, pct_bachelor, md_hh_income) %>%
+  group_by(drink) %>%
+  summarise_all(c(avg=mean, std=sd)) %>% # sum means total count, avg means percentage of of positive values
+  t() %>%
+  as.data.frame()
+
+# Get rid of first row, dependent variable
+sum_table_2 = sum_table_2[-1,]
+
+# Organize the table
+sum_table_2 = sum_table_2 %>%
+  mutate(index = rownames(sum_table_2),
+         var_name = index %>% substring(1, nchar(index) - 4),
+         func_name = index %>% substring(nchar(index) - 2, nchar(index))) %>%
+  rename(no_alcohol = V1, alcohol = V2) %>%
+  dplyr::select(no_alcohol, alcohol, var_name, func_name)
+
+sum_table_std = sum_table_2 %>% filter(func_name == "std") %>%
+  dplyr::select(no_alcohol, alcohol, var_name) %>%
+  mutate(no_alcohol = no_alcohol %>% round(2),
+         alcohol = alcohol %>% round(2)) %>%
+  rename(count_no_alcohol = no_alcohol, count_alcohol = alcohol)
+
+sum_table_avg = sum_table_2 %>% filter(func_name == "avg") %>%
+  dplyr::select(no_alcohol, alcohol, var_name) %>%
+  mutate(no_alcohol = no_alcohol %>% round(2),
+         alcohol = alcohol %>% round(2)) %>%
+  rename(pct_no_alcohol = no_alcohol, 
+         pct_alcohol = alcohol)
+
+output_2 = sum_table_avg%>%
+  left_join(sum_table_std, on = "var_name") %>%
+  dplyr::select(var_name, count_no_alcohol, pct_no_alcohol, count_alcohol, pct_alcohol)
+
+# Organize final output suitable for kable
+rownames(output_2) = names_dict[output_2$var_name] %>% unname()
+output_2 = output_2 %>% dplyr::select(-var_name)
+```
+
+-   Independent sample T-Tests for the continuous variables
+
+```{r ind-sample-ttest}
+
+test = t.test(df$pct_bachelor ~ df$drink)
+test$p.value
+
+var_list_2 = c("pct_bachelor", "md_hh_income")
+ttest_list = c()
+
+for(var in var_list_2) {
+  this_test = t.test(df[[var]] ~ df$drink)
+  this_p = this_test$p.value %>% round(3)
+  ttest_list = c(ttest_list, this_p)
+}
+
+output_2 = output_2 %>% cbind(ttest_list) %>%
+  rename("T-Test p-value" = ttest_list)
+
+colnames(output_2) = c("Mean", "SD", "Mean", "SD", "T-Test p-value")
+
+output_2 %>%
+  kable(caption = "Table 3. Cross tabulations of the dependent variable and continuous predictors") %>%
+  add_header_above(c(" ", "No alcohol involved" = 2, "Alcohol involved" = 2, "Independent Samples T-Test" = 1)) %>%
+  kable_classic(full_width=FALSE, html_font="Cambria")
+```
+
+-   Check for multi-collinearity
+
+```{r check-collin}
+
+rcorr = 
+  df %>% 
+  dplyr::select(-record_id, -drink) %>% 
+  as.matrix() %>% 
+  rcorr(type = "pearson")
+
+r_matrix = rcorr$r %>% round(2)
+p_matrix = rcorr$P %>% round(2)
+
+p_matrix[is.na(p_matrix)] = "/"
+
+var_names = names_dict[colnames(r_matrix)] %>% unname()
+
+colnames(r_matrix) = var_names
+colnames(p_matrix) = var_names
+rownames(r_matrix) = var_names
+rownames(p_matrix) = var_names
+
+r_matrix %>%
+  kable(caption = "Table 3. Correlation matrix of predictors") %>%
+  kable_classic(html_font="Cambria")
+
+```
+
+```{r}
+
+p_matrix %>%
+  kable(caption = "Table 4. Correlation matrix (p-values) of predictors") %>%
+  kable_classic(html_font="Cambria")
+```
 
 # Results
