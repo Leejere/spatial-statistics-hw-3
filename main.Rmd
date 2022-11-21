@@ -98,36 +98,102 @@ Before running a logistic regression, statisticians often carry out a series of 
 
 **Independent-sample T-tests**. To examine the correlation between dependent variable and a continuous predictor, we may calculate the mean value of the predictor by the binary outcome. The true or false of the binary outcome essentially divides all the observations into two samples, and then we can test whether there is a significant difference between the two samples through an independent-sample T-test. The null hypothesis for this test is that there is no significant difference between the two samples. If such hypothesis stands, then the difference of the two sample means will be of T-distribution. If the observed T-score is associated with a p-value lower than 0.05, then we reject the null hypothesis for the alternative hypothesis that there is significant difference between the two samples, and therefore the predictor is correlated with the dependent variable.
 
-# Results
+# Data exploration
+
+-   Import data
 
 ```{r import}
 
 # Import data
 df = read.csv("data/Logistic Regression Data.csv") %>%
-  rename(record_id = CRN, # Crash record number
-         drink = DRINKING_D, # Drinking driver indicator (boolean)
-         fatal_injury = FATAL_OR_M, # Crash resulted in fatality or major injury (boolean)
-         overturned = OVERTURNED, # Crash involved an overturned vehicle (boolean)
-         phone = CELL_PHONE, # Driver was using a cell phone (boolean)
-         speeding = SPEEDING, # Crash involved speeding car (boolean)
-         aggressive = AGGRESSIVE, # Crash involved aggressive driving (boolean)
-         teen_driver = DRIVER1617, # Car involved at least one driver who was 16 or 17 years old (boolean)
-         senior_driver = DRIVER65PLUS, # Crash involved at least one driver was was at least 65 years old (boolean)
-         pct_bachelor = PCTBACHMOR, # Pct residents in CBG with bachelor's degree or higher
-         md_hh_income = MEDHHINC, # Median houshold income of CBG
-        )
+  dplyr::select(record_id = CRN, # Crash record number
+                drink = DRINKING_D, # Drinking driver indicator (boolean)
+                fatal_injury = FATAL_OR_M, # Crash resulted in fatality or major injury (boolean)
+                overturned = OVERTURNED, # Crash involved an overturned vehicle (boolean)
+                phone = CELL_PHONE, # Driver was using a cell phone (boolean)
+                speeding = SPEEDING, # Crash involved speeding car (boolean)
+                aggressive = AGGRESSIVE, # Crash involved aggressive driving (boolean)
+                teen_driver = DRIVER1617, # Car involved at least one driver who was 16 or 17 years old (boolean)
+                senior_driver = DRIVER65PLUS, # Crash involved at least one driver was was at least 65 years old (boolean)
+                pct_bachelor = PCTBACHMOR, # Pct residents in CBG with bachelor's degree or higher
+                md_hh_income = MEDHHINC, # Median houshold income of CBG
+                )
 
 # Dictionary of var names to their real names
 names_dict = 
   c("record_id" = "Record ID",
     "drink" = "Involved drnking driver",
+    "phone" = "Involved phone usage",
     "fatal_injury" = "Involved fatality or major injury",
     "overturned" = "Involved overturned vehicle",
     "speeding" = "Involved speeding car",
     "aggressive" = "Involved aggressive driving",
-    "tean_driver" = "Involved driver 16 to 17 years old",
+    "teen_driver" = "Involved driver 16 to 17 years old",
     "senior_driver" = "Involved driver 65 years or older",
     "pct_bachelor" = "Pct residents in CBG w/ at least bachelor's degree",
     "md_hh_income" = "Median houshold income of CBG")
 
 ```
+
+-   Tabulations
+
+```{r dv-tab, results="asis"}
+
+# Tabulation of the dependent variable
+table(df$drink) %>%
+  as.data.frame() %>%
+  mutate("Drinking Status" = ifelse(Var1 == 0, "Involved drinking driver",
+                                  "Did not involve drinking driver")) %>%
+  dplyr::select("Drinking Status", Freq) %>%
+  mutate(Proportion = (Freq * 100 / sum(Freq)) %>% round(1) %>% paste0("%")) %>%
+  kable(caption = "Table 1. Tabulation of the dependent variable") %>%
+  kable_classic(full_width=FALSE, html_font="Cambria")
+```
+```{r cross-tabs, results="asis"}
+
+# Sum all counts and percentages
+sum_table = df %>%
+  dplyr::select(-record_id, -pct_bachelor, -md_hh_income) %>%
+  group_by(drink) %>%
+  summarise_all(c(sum=sum, avg=mean)) %>% # sum means total count, avg means percentage of of positive values
+  t() %>%
+  as.data.frame()
+
+# Get rid of first row, dependent variable
+sum_table = sum_table[-1,] 
+
+# Organize the table
+sum_table = sum_table %>%
+  mutate(index = rownames(sum_table),
+         var_name = index %>% substring(1, nchar(index) - 4),
+         func_name = index %>% substring(nchar(index) - 2, nchar(index))) %>%
+  rename(no_alcohol = V1, alcohol = V2) %>%
+  dplyr::select(no_alcohol, alcohol, var_name, func_name)
+
+sum_table_sum = sum_table %>% filter(func_name == "sum") %>%
+  dplyr::select(no_alcohol, alcohol, var_name) %>%
+  rename(count_no_alcohol = no_alcohol, count_alcohol = alcohol)
+sum_table_avg = sum_table %>% filter(func_name == "avg") %>%
+  dplyr::select(no_alcohol, alcohol, var_name) %>%
+  mutate(no_alcohol = (no_alcohol * 100) %>% round(1) %>% paste0("%"),
+         alcohol = (alcohol * 100) %>% round(1) %>% paste0("%")) %>%
+  rename(pct_no_alcohol = no_alcohol, 
+         pct_alcohol = alcohol)
+
+output = sum_table_sum %>%
+  left_join(sum_table_avg, on = "var_name") %>%
+  dplyr::select(var_name, count_no_alcohol, pct_no_alcohol, count_alcohol, pct_alcohol)
+
+# Organize final output suitable for kable
+rownames(output) = names_dict[output$var_name] %>% unname()
+output = output %>% dplyr::select(-var_name)
+colnames(output) = c("N", "%", "N", "%")
+
+output %>%
+  kable(caption = "Table 2. Cross tabulations of the dependent variable and binary predictors") %>%
+  add_header_above(c(" ", "No alcohol involved" = 2, "Alcohol involved" = 2)) %>%
+  kable_classic(full_width=FALSE, html_font="Cambria")
+```
+
+
+# Results
