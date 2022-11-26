@@ -30,6 +30,8 @@ library(gmodels)
 
 # Introduction
 
+Alcohol is a major factor related to vehicle accidents. According to a study conducted by the National Highway Traffic Safety Administration, the economic impact of alcohol-related crashes exceeds 59 billion dollars annually. In this assignment, we aimed to identify some of the factors contributing to alcohol-related crashes. More specifically, we used logistic regression to explore what factors make vehicle crashes more likely caused by drinking.
+
 -   State the problem, the importance of the problem, and the setting of the analysis (Philadelphia).
 -   Speculate as to **why** the predictors we are using might be associated with the dependent variable.
 -   Indicate the tool (R).
