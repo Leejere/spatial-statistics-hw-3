@@ -7,9 +7,10 @@ output:
     toc: yes
     toc_float: yes
     code_folding: hide
-    theme: paper
+    theme: journal
     fig_caption: yes
   pdf_document: default
+monofont: Hack
 editor_options: 
   markdown: 
     wrap: sentence
@@ -34,8 +35,17 @@ library(plotROC)
 
 Alcohol is a major factor related to vehicle accidents. According to a study conducted by the National Highway Traffic Safety Administration, the economic impact of alcohol-related crashes exceeds 59 billion dollars annually. In this assignment, we aimed to identify some of the factors contributing to alcohol-related crashes in the city of Philadelphia. More specifically, we used logistic regression to explore what factors make vehicle crashes more likely caused by drinking.
 
--   Speculate as to **why** the predictors we are using might be associated with the dependent variable.
--   Indicate the tool (R).
+Nine predictors were entered that we speculated might be associated with alcohol involvement in car accidents. Seven predictors are attributes of the crashes themselves:
+
+-   Involvement of fatality or major injury (`fatal_injury`) and involvement of overturned vehicle(s) (`overturned`). It is likely that highly fatal or serious accidents are associated with alcohol.
+
+-   Involvement of phone usage (`phone`), speeding (`speeding`), and aggressive driving (`aggressive`). These other highly risky driving behaviors might also cause crashes on their own independent from drinking, or they are related to drinking.
+
+-   Involvement of senior drivers 65 years or older (`senior_driver`) or teenage drivers 16 to 17 years old (`teen_driver`). It is likely that different age groups differ in their respective main causes for car accidents.
+
+-   Demographic attributes of the census block group (CBG) where the accident took place, i.e., percentage of residents holding a bachelor's degree or higher (`pct_bachelor`) and median household income (`md_hh_icome`). It is plausible that accident causes differ among different demographic groups.
+
+We used R for all the analysis, regression, and data visualization in this assignment.
 
 # Methods
 
@@ -54,14 +64,14 @@ The translator function of $ln(\frac{p}{1-p})$ is called the the *logit function
 The final equation for the logistic model is written as follows:
 
 $$
-ln(\frac{p}{1-p})=\beta_0 + \beta_1\cdot fatal\_injury + \beta_2\cdot overturned + \beta_3\cdot phone + \beta_4\cdot speeding + \beta_5\cdot aggressive + \beta_6\cdot teen\_driver + \beta_7\cdot senior\_driver + \beta_8\cdot pct\_bachelor + \beta_9\cdot md\_hh\_income + \epsilon
+ln(\frac{p}{1-p})=\beta_0 + \beta_1\cdot fatal\_injury + \beta_2\cdot overturned + \beta_3\cdot phone + \\beta_4\cdot speeding + \beta_5\cdot aggressive + \beta_6\cdot teen\_driver + \\beta_7\cdot senior\_driver + \beta_8\cdot pct\_bachelor + \beta_9\cdot md\_hh\_income + \epsilon
 $$
 
 where $ln(\frac{p}{1-p})$ is the "log odds" where $p$ is the probability of the crash being caused by alcohol, $\beta_0$ is the intercept coefficient, $\beta_1$ to $\beta_n$ are the coefficients of the nine predictors, and $\epsilon$ is the residual. The model is estimated through the Maximum Likelihood Method.
 
-We determine whether each coefficient is significant through hypothesis testing. For each coefficient $\beta_i$, the *null hypothesis* ($H_0$) is that $\beta_i=0$. As $\beta_i$ happens to have a normal distribution with a standard deviation of $\sigma_{\beta_i}$, we may calculate a Z-score through $\frac{\hat\beta_i - 0}{\sigma_{\beta_i}}$ where $\hat\beta_i$ is the coefficient estimated from the model. If the p-value associated with the Z-score goes under 0.05, we reject the null hypothesis for the *alternative hypothesis* that $\beta_i\neq0$.
+We determined whether each coefficient is significant through hypothesis testing. For each coefficient $\beta_i$, the *null hypothesis* ($H_0$) is that $\beta_i=0$. As $\beta_i$ happens to have a normal distribution with a standard deviation of $\sigma_{\beta_i}$, we may calculate a Z-score through $\frac{\hat\beta_i - 0}{\sigma_{\beta_i}}$ where $\hat\beta_i$ is the coefficient estimated from the model. If the p-value associated with the Z-score goes under 0.05, we reject the null hypothesis for the *alternative hypothesis* that $\beta_i\neq0$.
 
-To interpret the coefficients, most statisticians use a concept of *odds ratio*, which is calculated by exponentiating the $\beta$ coefficients ($e^{\beta_i}$). For every unit of change in the predictor $\x_i$, the odds ratio increases by a factor of $e^{\beta_i}$. 
+To interpret the coefficients, most statisticians use a concept of *odds ratio*, which is calculated by exponentiating the $\beta$ coefficients ($e^{\beta_i}$). For every unit of change in the predictor $x_i$, the odds ratio increases by a factor of $e^{\beta_i}$. 
 
 It should be noted that the logistic model only outputs the estimated *probabilities*; and to obtain the predictions for the dependent variable, we need to determine a “cutoff probability”, above which the dependent variable is predicted to be true and below which false.
 
@@ -88,7 +98,7 @@ Deciding on the right cutoff value is often a trade-off process. If the cutoff v
 
 This trade-off process can be visualized using the *ROC curve*, in which the x-axis stands for false positive rate, or one minus specificity, and the y-axis stands for true positive rate or sensitivity. As you lower the cutoff value, the false positive rate goes up, whereas the true positive rate also goes up, forming a curve depicted as follows:
 
-![roc-diagram](./pic/roc-curve-diagram.png)
+<img src="./pic/roc-curve-diagram.png" alt="roc-diagram" width="400"/>
 
 This diagram can be used as a guide to spot the best combination of reasonably high sensitivity and specificity, i.e., a point as close to the upper-left corner as possible. A few methods exist the determine this point: 
 -   By maximizing the sum of sensitivity and specificity, or the *Youden Index*.
@@ -393,7 +403,7 @@ However, the correlations among the predictors are very weak.
 
 Having performed the exploratory analysis, this section focuses on the logistic regression itself. First, we ran a logistic regression (base) that includes all the nine predictors. The model summary is presented below.
 
-```{r reg-all-predictors}
+```{r reg-all-predictors, results="asis"}
 
 # Logistic Regression: All Nine Predictors
 reg_base <- glm(drink ~ 
@@ -443,7 +453,7 @@ make_coef_table(base_coefficient,
 
 ```
 
-As shown on Table 6., the model produced an overall AIC of 18359.69. Seven out of the nine predictors turned out significant (with p-values smaller than 0.05). Two variables, namely phone usage and the percentage of residents with a bachelor's degree or higher in the CBG, were not significant. Let us explain the significant model coefficients through *odd ratios*:
+As shown on Table 6., the model produced an overall AIC of 18,359.69. Seven out of the nine predictors turned out significant (with p-values smaller than 0.05). Two variables, namely phone usage and the percentage of residents with a bachelor's degree or higher in the CBG, were not significant. Let us explain the significant model coefficients through *odd ratios*:
 
 -   The odd ratio for the predictor “Involved fatality or major injury” is 2.26, meaning that compared to accidents with no fatality nor major injury, if the accidents were with fatality or major injury, then the odds of the crash being associated with drinking goes up by 126% (2.26 minus 1).
 
@@ -525,7 +535,7 @@ On Table 5., we calculated the sensitivity, specificity, and misclassification r
 However, this does not mean that we should aim for the lowest misclassification rate possible. Recall that the observed “True” cases only make up about 5.7% of all the data (see Table 1.), and as one raise the cut-off value, the misclassification rate gradually approximates this percentage. If you predict *all* cases to be “False”, then you get a misclassification rate of 0.057, which is lowest on Table 5, but such predictions also become worthless. Therefore, we need to consider the combination of sensitivity and specificity to determine the best cut-off value.
 
 
-```{r cut_off_table_present}
+```{r cut_off_table_present, results="asis"}
 
 cut_off_df %>%
   kable(caption = "Table 7. Sensitivities, specificities, and misclassification rates corresponding to a series of cutoffs") %>%
@@ -560,21 +570,9 @@ library(ROCR)
 # Create a prediction instance
 predictions <- prediction(predictions = fit_df$fitted, labels = fit_df$observed)
 
-# =======================================================================
-# prediction is a class that contains the following slots:
-# - predictions: a list, containing predictions (p)
-# - labels: observed y
-# - cutoffs: a series of cutoffs (in this case 8,000+ cutoffs)
-# - fp, tp, tp, tn: instances of fp, tp, tp, tn, corresponding to each cutoff
-# ...
-# =======================================================================
 
 # Outputs ROC performance object
-roc_performance = performance(pred, measure = "tpr", x.measure="fpr")
-
-# =======================================================================
-# The x and y values in the ROC plot; corresponding the the 8,000+ cutoffs
-# =======================================================================
+roc_performance = performance(predictions, measure = "tpr", x.measure="fpr")
 
 locate_optimal_cutoff = function(
     x, # vector of x values (FP rates)
@@ -606,7 +604,7 @@ find_optimal_cutoff = function(performance, predictions){
 }
 # This will print the optimal cut-off point and the corresponding
 # specificity and sensitivity
-print(find_optimal_cutoff(roc.perf, predictions))
+print(find_optimal_cutoff(roc_performance, predictions))
 
 ```
 
@@ -616,7 +614,7 @@ The model output shows that 0.637 is the cut-off value that minimizes the distan
 
 In this section, we tested a second model that included only the seven binary predictors, excluding median household income and the percentage of residents with a bachelor's degree or higher.
 
-```{r reg-binary-predictors}
+```{r reg-binary-predictors, results="asis"}
 
 # Logistic Regression: only the seven binary predictors
 reg_bi_only <- glm(drink ~ 
@@ -643,8 +641,31 @@ make_coef_table(bi_only_coefficients,
 
 ```
 
-Table 8. summarizes the model outputs. All the predictors that were significant in the base model were still significant in this model, and the predictor of phone usage remained insignificant. The AIC for this model is 18360, which is almost the same as the base model, meaning that the two models are fairly equal in their goodness of fit.
+Table 8. summarizes the model outputs. All the predictors that were significant in the base model were still significant in this model, and the predictor of phone usage remained insignificant. The AIC for this model is 18,360, which is almost the same as the base model, meaning that the two models are fairly equal in their goodness of fit.
 
 # Discussion
 
+In this assignment, we ran two logistic regression models to explore what factors make vehicle crashes more likely caused by drinking. We entered nine predictors into the models, in which seven are binary, and two are continuous. The model results show that the following predictors are positively related to alcohol-caused crashes:
+
+-   Involvement of fatality or major injury;
+
+-   Involvement of any overturned vehicle;
+
+-   Involvement of speeding.
+
+On the flip side, the following predictors are negatively related to alcohol-caused crashes:
+
+-   Involvement of aggressive driving;
+
+-   Involvement of senior drivers 65 years or older;
+
+-   Involvement of teenage drivers 16 to 17 years old.
+
+Phone usage and the percentage of bachelor's (or higher) degree holders did not turn out to be significant predictors. Median household income was a significant predictor, but its coefficient was so low and even negligible.
+
+The model coefficients were not very surprising. For example, the model showed that serious accidents — fatal and injury-inducing crashes or crashes with overturned vehicles — were more likely to be related to alcohol. The model also suggested that accidents from speeding were more likely caused by alcohol. On the other hand, crashes that involved aggressive driving were negatively associated with alcohol, probably because crashes are often caused by aggressive behavior unrelated to alcohol. Regarding drivers’ age, the model suggested that teenage and senior drivers are less likely involved in accidents caused by drinking, but rather other accidents of other causes.
+
+Overall, our regression models did not perform very well, with an AUC of only 65%. We would not say that the logistic regression was inappropriate for our purpose: although the percentage of “Trues” for the dependent variable is small, the aggregate number of “True” cases was 2,485, which was a decent amount for the Maximum Likelihood Estimation method. 
+
+Rather, it could our *predictors* that posed the greatest limitation, as they do not possess enough explanation power. With ideal predictors, the predicted probabilities should differentiate between by the observed categories, namely, the observed “True” cases should generally be predicted to have high probabilities, and the observed “False” cases should be predicted to have low probabilities. In our case, however, Fig. 1. showed that the predicted probabilities hardly differentiate by the two observed categories. Therefore, we could not reach high sensitivity and specificity no matter what cut-off value we selected. It is likely that the methods to predict rare events as suggested by Paul Allison might not help in our case, if no better predictors are available.
 

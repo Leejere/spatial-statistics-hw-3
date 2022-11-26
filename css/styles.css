@@ -10,14 +10,29 @@ caption {
 } 
 
 
-body{
+body {
   font-size: 11pt;
 }
 
-td{
+td {
   font-size: 9pt;
 }
-th{
+
+th {
   font-size: 0.8em;
   color: grey;
+}
+
+code {
+  font-family: Hack, Consolas, sans-serif;
+  font-size: 11px;
+}
+
+pre {
+  font-size: 11px;
+}
+
+img {
+  margin-left: auto;
+  margin-right: auto;
 }
