@@ -351,3 +351,8 @@ p_matrix %>%
 The tables above shows that there is some collinearity between some predictors. However, the correlations among the predictors are very weak.
 
 # Logistic Regression Results
+
+Having performed the exploratory analysis, this section focuses on the logistic regression itself.
+
+
+
