@@ -32,7 +32,8 @@ pre {
   font-size: 11px;
 }
 
-img {
-  margin-left: auto;
-  margin-right: auto;
+img[alt=roc-diagram] {
+  position: relative;
+  left: 50%;
+  margin-left: -150px;
 }

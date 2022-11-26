@@ -35,59 +35,63 @@ library(plotROC)
 
 Alcohol is a major factor related to vehicle accidents. According to a study conducted by the National Highway Traffic Safety Administration, the economic impact of alcohol-related crashes exceeds 59 billion dollars annually. In this assignment, we aimed to identify some of the factors contributing to alcohol-related crashes in the city of Philadelphia. More specifically, we used logistic regression to explore what factors make vehicle crashes more likely caused by drinking.
 
-Nine predictors were entered that we speculated might be associated with alcohol involvement in car accidents. Seven predictors are attributes of the crashes themselves:
+Nine predictors were entered that we speculated might be associated with alcohol involvement in car accidents. Seven predictors are attributes of the crashes themselves, and two more the demographic attributes of the census block group (CBG) where the accident took place.
 
--   Involvement of fatality or major injury (`fatal_injury`) and involvement of overturned vehicle(s) (`overturned`). It is likely that highly fatal or serious accidents are associated with alcohol.
+-   Involvement of fatality or major injury (`fatal_injury`) and involvement of overturned vehicle(s) (`overturned`). It is likely that highly fatal or serious accidents are likely to be associated with alcohol.
 
--   Involvement of phone usage (`phone`), speeding (`speeding`), and aggressive driving (`aggressive`). These other highly risky driving behaviors might also cause crashes on their own independent from drinking, or they are related to drinking.
+-   Involvement of phone usage (`phone`), speeding (`speeding`), and aggressive driving (`aggressive`). These other highly risky driving behaviors might also cause crashes on their own independent from drinking. These behaviors may also be associated with the behavior of drinking.
 
--   Involvement of senior drivers 65 years or older (`senior_driver`) or teenage drivers 16 to 17 years old (`teen_driver`). It is likely that different age groups differ in their respective main causes for car accidents.
+-   Involvement of senior drivers 65 years or older (`senior_driver`) or teenage drivers 16 to 17 years old (`teen_driver`). It is likely that different age groups differ in the primary causes for car accidents they are involved in.
 
--   Demographic attributes of the census block group (CBG) where the accident took place, i.e., percentage of residents holding a bachelor's degree or higher (`pct_bachelor`) and median household income (`md_hh_icome`). It is plausible that accident causes differ among different demographic groups.
+-   Demographic attributes of the CBG where the accident took place, i.e., percentage of residents holding a bachelor's degree or higher (`pct_bachelor`) and median household income (`md_hh_icome`). It is plausible that accident causes differ among different demographic groups.
 
 We used R for all the analysis, regression, and data visualization in this assignment.
 
 # Methods
 
-## Constructing and interpreting the model
+## The logistic model
 
-In an OLS regression, we dealt with dependent variables whose values were continuous with a reasonably large range, so that the model could be explained as one unit's change of a predictor correlating with how many units' change of the dependent variable (holding other variables constant).
-However, this explanation no longer applies when the dependent variable is binary, as it only takes values of either 0 or 1.
+In the OLS regression performed in the previous assignments, we dealt with dependent variables whose values were *continuous* with a reasonably *large range*. In this way, the models could be explained as one unit's change of a predictor correlating with certain units' change of the dependent variable, holding other variables constant. However, this explanation no longer applies when the dependent variable is binary, as it only takes values of either 0 or 1. We need a different approach.
 
-The logistic regression method works around this problem by turning the $y$ in the equation from *binary* to continuous *probability*.
-In this way, we may say that one unit's change of a predictor is correlated with certain increase or decrease in the probability of the dependent variable being "True".
+The logistic regression method works around this problem by turning the $y$ in the equation from *binary* to continuous *probability*. In this way, we may say that one unit's change of a predictor is correlated with certain increase or decrease in the probability of the dependent variable being "True".
 
-However, this brings another problem, as probability only ranges from 0 to 1, whereas the OLS regression is a linear model in which the $y$ should have no lower and upper bounds. To solve this problem, we can construct a new variable, $ln\frac{p}{1-p}$, in which $p$ is the probability of the dependent variable being "True" ($p=P(drink=1)$). The ratio of "True" probability against "False" probability is called the *odds*. By wrapping the *odds* inside of a log-transform, we have successfully turned the scope of $y$ to from $-\infty$ to $\infty$.
+However, this brings another problem, as probability only ranges from 0 to 1, whereas in a linear model, the $y$ should have no lower and upper bounds. To solve this problem, we can use a “translator” function to construct a new variable, $ln\frac{p}{1-p}$, in which $p$ is the probability of the dependent variable being "True" ($p=P(drink=1)$). The ratio of "True" probability against "False" probability is called the *odds*. By wrapping the *odds* inside of a log-transformation, we have successfully turned the scope of $y$ to from $-\infty$ to $\infty$.
 
-The translator function of $ln(\frac{p}{1-p})$ is called the the *logit function*. As the input probability approaches zero, the output logit odds approaches $-\infty$; conversely, if the input probability is close to 1, the output logit odds reaches $\infty$. In this way, the binary variable is successfully transformed into a continuous one with an infinite scope, so that we can use it as the new $y$ and fit a model.
+This translator function of $ln(\frac{p}{1-p})$ is called the the *logit function*. As the input probability approaches zero, the output logit odds approaches $-\infty$; conversely, if the input probability is close to 1, the output logit odds reaches $\infty$. In this way, the binary variable is successfully transformed into a continuous one with an infinite scope, so that we can use it as the new $y$ and fit a linear model.
 
-The final equation for the logistic model is written as follows:
+In our case, the final equation for the logistic model is written as follows:
 
 $$
 ln(\frac{p}{1-p})=\beta_0 + \beta_1\cdot fatal\_injury + \beta_2\cdot overturned + \beta_3\cdot phone + \\beta_4\cdot speeding + \beta_5\cdot aggressive + \beta_6\cdot teen\_driver + \\beta_7\cdot senior\_driver + \beta_8\cdot pct\_bachelor + \beta_9\cdot md\_hh\_income + \epsilon
 $$
 
-where $ln(\frac{p}{1-p})$ is the "log odds" where $p$ is the probability of the crash being caused by alcohol, $\beta_0$ is the intercept coefficient, $\beta_1$ to $\beta_n$ are the coefficients of the nine predictors, and $\epsilon$ is the residual. The model is estimated through the Maximum Likelihood Method.
+where $ln(\frac{p}{1-p})$ is the "log odds" where $p$ is the probability of the crash being caused by alcohol, $\beta_0$ is the intercept coefficient, $\beta_1$ to $\beta_n$ are the coefficients of the nine predictors, and $\epsilon$ is the residual. The model is estimated through the Maximum Likelihood Estimation method.
 
-We determined whether each coefficient is significant through hypothesis testing. For each coefficient $\beta_i$, the *null hypothesis* ($H_0$) is that $\beta_i=0$. As $\beta_i$ happens to have a normal distribution with a standard deviation of $\sigma_{\beta_i}$, we may calculate a Z-score through $\frac{\hat\beta_i - 0}{\sigma_{\beta_i}}$ where $\hat\beta_i$ is the coefficient estimated from the model. If the p-value associated with the Z-score goes under 0.05, we reject the null hypothesis for the *alternative hypothesis* that $\beta_i\neq0$.
+The significance of each coefficient is tested through hypothesis testing. For each coefficient $\beta_i$, the *null hypothesis* ($H_0$) is that $\beta_i=0$. As $\beta_i$ has a normal distribution with a standard deviation of $\sigma_{\beta_i}$, we can calculate a Z-score through $\frac{\hat\beta_i - 0}{\sigma_{\beta_i}}$ where $\hat\beta_i$ is the coefficient estimated from the model. If the p-value associated with the Z-score goes under 0.05, we reject the null hypothesis for the *alternative hypothesis* that $\beta_i\neq0$.
 
-To interpret the coefficients, most statisticians use a concept of *odds ratio*, which is calculated by exponentiating the $\beta$ coefficients ($e^{\beta_i}$). For every unit of change in the predictor $x_i$, the odds ratio increases by a factor of $e^{\beta_i}$. 
+To interpret the coefficients, most statisticians use a concept of *odds ratio*, which is calculated by exponentiating the $\beta$ coefficients ($e^{\beta_i}$). The odds ratio is interpreted as follows: for every unit of change in the predictor $x_i$, the odds of the dependent variable being “True” against “False” increases (or shrinks) by a factor of $e^{\beta_i}$. 
 
 It should be noted that the logistic model only outputs the estimated *probabilities*; and to obtain the predictions for the dependent variable, we need to determine a “cutoff probability”, above which the dependent variable is predicted to be true and below which false.
 
-## Model goodness of fit
+## Goodness of fit
 
-How do we determine the goodness of fit of a logistic regression model?
-As in the OLS model, $R^2$ can be estimated, but it no longer bears the interpretation as the ratio of variance explained by the model.
-To compare the goodness of fit of multiple nested models, we may use the Akaike Information Criterion, a smaller value of which indicates a better fit compared to the baseline model.
+How do we determine the goodness of fit of a logistic regression model? As in the OLS model, $R^2$ can be estimated, but it no longer bears the interpretation as the ratio of variance explained by the model. To compare the goodness of fit of multiple nested models, we may use the *Akaike Information Criterion*, or AIC, a smaller value of which indicates a better fit compared to the baseline model.
 
-As mentioned in the previous section, the predictions for the dependent variable depend on the "cutoff probability" that we set. An observation is predicted to be true ($\hat y=1$), if the estimated probability $p$ is higher than the threshold, and vice versa.
-Then, each observation is categorized into one of the four following categories:
+As mentioned in the previous section, the predictions for the dependent variable depend on the "cutoff probability" that we set. An observation is predicted to be true ($\hat y=1$), if the estimated probability $p$ is higher than the threshold, and vice versa. Then, each observation is categorized into one of the four following categories in Table 1.:
 
-|                    | Observed True      | Observed False     |
-|--------------------|--------------------|--------------------|
-| Predicted Positive | TP: True Positive  | FP: False Positive |
-| Predicted Negative | FN: False Negative | TN: True Negative  |
+```{r category-table, echo=FALSE, results="asis"}
+
+table = data.frame("Observed True" = c("TP: True Positive", "FN: False Negative"),
+                   "Observed False" = c("FP: False Positive", "TN: True Negative"))
+colnames(table) = c("Observed True", "Observed False")
+rownames(table) = c("Predicted Positive", "Predicted Negative")
+
+table %>% 
+  kable(caption = "Table 1. Four outcomes of a logistic model") %>%
+  kable_classic(full_width = FALSE, html_font = "Cambria")
+```
+
+<br />
 
 The goal is to find the best cutoff value that maximizes TP and TN, while minimizing FP and FN. Specifically,
 -   *Sensitivity*, or *True Positive Rate*, stands for how well the model is able to pick out the True observations, and is calculated as $\frac{TP}{TP+FN}$.
@@ -98,10 +102,13 @@ Deciding on the right cutoff value is often a trade-off process. If the cutoff v
 
 This trade-off process can be visualized using the *ROC curve*, in which the x-axis stands for false positive rate, or one minus specificity, and the y-axis stands for true positive rate or sensitivity. As you lower the cutoff value, the false positive rate goes up, whereas the true positive rate also goes up, forming a curve depicted as follows:
 
-<img src="./pic/roc-curve-diagram.png" alt="roc-diagram" width="400"/>
+<img src="./pic/roc-curve-diagram.png" alt="roc-diagram" width="300"/>
+<p class="caption">Fig. 1. Diagram of an ROC curve</p>
 
 This diagram can be used as a guide to spot the best combination of reasonably high sensitivity and specificity, i.e., a point as close to the upper-left corner as possible. A few methods exist the determine this point: 
+
 -   By maximizing the sum of sensitivity and specificity, or the *Youden Index*.
+
 -   By minimizing the distance on the ROC plot from the curve to the upper left corner.
 
 If we have a good model, all the points on the ROC curve (no matter the cutoff value) will be generally closer to the upper-left corner, and the area under the curve will be greater. Therefore, the *Area Under the Curve*, or AUC, is another criterion of the goodness of fit of the logistic model. The better the model’s fit, the closer the AUC is to 1. AUC may be interpreted as the probability that, given two random cases, the observed “True” will be predicted a higher probability than the observed “False”.
@@ -124,9 +131,19 @@ Unlike the OLS, however, the logistic regression model makes no assumption that 
 
 Before running a logistic regression, statisticians often carry out a series of exploratory analysis.
 
-**Cross-tabulation between the dependent variable and categorical predictors**. We can cross-tabulate all the observations into groups, each group being a combination of the true/false value of the dependent and a class of the predictor. Using this tabulation, a *chi-square test* is performed. Its null hypothesis is that there is no significant difference in terms of outcome (dependent variable) between the classes, as opposed to the alternative hypothesis of there being a significant difference. If the null hypothesis stands, then the chi-square value should be of chi-square distribution. If the p-value of the observed chi-square is reasonably small (i.e., smaller than 0.05), then we may reject the null hypothesis for the alternative hypothesis and state that the predictor is indeed correlated with the dependent variable.
+**Cross-tabulation between the dependent variable and categorical predictors**. We can cross-tabulate all the observations into groups, each group being a combination of the true/false value of the dependent and a class of the predictor. Using this tabulation, a *chi-square test* is performed. 
 
-**Independent-samples T-tests**. To examine the correlation between dependent variable and a continuous predictor, we may calculate the mean value of the predictor by the binary outcome. The true or false of the binary outcome essentially divides all the observations into two samples, and then we can test whether there is a significant difference between the two samples through an independent-samples T-test. The null hypothesis for this test is that there is no significant difference between the two samples. If such hypothesis stands, then the difference of the two sample means will be of T-distribution. If the observed T-score is associated with a p-value lower than 0.05, then we reject the null hypothesis for the alternative hypothesis that there is significant difference between the two samples, and therefore the predictor is correlated with the dependent variable.
+The null hypothesis of a chi-square test is that there is no significant difference in terms of outcome (dependent variable) between the classes, and therefore cases should be *randomly distributed* across the tabulated categories; as opposed to the alternative hypothesis of there being a significant difference. $\chi^2$ is estimated for this tabulation:
+
+$$
+\chi_2 = \sum\frac{(O_i-E_i)^2}{E_i}
+$$
+
+where $O_i$ is the observed frequency of each category, and $E_i$ is the expected frequency of each category in random distribution. If the null hypothesis stands, then the chi-square value should be of chi-square distribution. If the p-value of the observed chi-square is reasonably small (i.e., smaller than 0.05), then we may reject the null hypothesis for the alternative hypothesis and state that the predictor is indeed correlated with the dependent variable.
+
+**Independent-samples T-tests**. To examine the correlation between dependent variable and a continuous predictor, we may calculate the mean value of the predictor by the binary outcome. The true or false of the binary outcome essentially divides all the observations into two samples, and then we can test whether there is a significant difference between the two samples through an independent-samples T-test. 
+
+The null hypothesis for the independent-samples T-test is that there is no significant difference between the two samples; and therefore there should be no significant difference between the sample means. If such hypothesis stands, then the difference of the two sample means will be of T-distribution with a mean of zero. If the observed T-score is associated with a p-value lower than 0.05, then we reject the null hypothesis for the alternative hypothesis that there is significant difference between the two samples, and therefore the predictor is correlated with the dependent variable.
 
 # Data exploration
 
@@ -167,7 +184,7 @@ names_dict =
 
 ## The dependent variable
 
-Let's first take a quick look at the dependent variable through Table 1.
+Let's first take a quick look at the dependent variable through Table 2.
 5.7% of all the crashes in the data set involved a drinking driver and therefore possibly caused by drinking.
 The other 94.3% of the crashes did not involve a drinking driver.
 
@@ -180,9 +197,10 @@ table(df$drink) %>%
                                     "Did not involve drinking driver")) %>%
   dplyr::select("Drinking Status", Freq) %>%
   mutate(Proportion = (Freq * 100 / sum(Freq)) %>% round(1) %>% paste0("%")) %>%
-  kable(caption = "Table 1. Tabulation of the dependent variable") %>%
+  kable(caption = "Table 2. Tabulation of the dependent variable") %>%
   kable_classic(full_width=FALSE, html_font="Cambria")
 ```
+<br />
 
 ## The binary predictors
 
@@ -196,7 +214,7 @@ In this section, we explored the relationship between the dependent variable and
 -   `teen_driver`: involved driver of 16 to 17 years old.
 -   `senior_driver`: involved driver 65 years or older.
 
-The below two code chunks performs a cross-tabulation between the dependent variable and the seven binary predictors, as shown in Table 2. The percentages indicate what percentages of crashes (either involving a drinking driver or not) are "true" in their respective predictors. The last column is the p-value corresponding to the $\chi^2$ test of the dependent variable and each predictors.
+The below two code chunks performs a cross-tabulation between the dependent variable and the seven binary predictors, as shown in Table 3. The percentages indicate what percentages of crashes (either involving a drinking driver or not) are "true" in their respective predictors. The last column is the p-value corresponding to the $\chi^2$ test of the dependent variable and each predictors.
 
 ```{r cross-tabs, message=FALSE}
 
@@ -263,14 +281,15 @@ output = output %>% cbind(chisq_list) %>%
 # Decorate output table
 colnames(output) = c("N", "%", "N", "%", "Chi-square p-value")
 output %>%
-  kable(caption = "Table 2. Cross tabulations of the dependent variable and binary predictors") %>%
+  kable(caption = "Table 3. Cross tabulations of the dependent variable and binary predictors") %>%
   add_header_above(c(" ", "No alcohol involved" = 2, "Alcohol involved" = 2, "Chi-square test" = 1)) %>%
   kable_classic(full_width=FALSE, html_font="Cambria")
 ```
 
+<br />
 The chi-square test results show that apart from cell-phone usage, all the other binary predictors are significant correlated with the dependent variable.
 
-## The continuous variables
+## The continuous predictors
 
 Next, we explored the dependent variable and the two continuous predictors:
 
@@ -278,7 +297,7 @@ Next, we explored the dependent variable and the two continuous predictors:
 
 -   `md_hh_income`: median household income of the census block group (CBG) where the crash took place.
 
-The below two code chunks perform a tabulation between the dependent variable and the two predictors (Table 3.), summarizing the mean and standard deviation of each predictor, categorized by the dependent variable (involved a drinking driver or not).
+The below two code chunks perform a tabulation between the dependent variable and the two predictors (Table 4.), summarizing the mean and standard deviation of each predictor, categorized by the dependent variable (involved a drinking driver or not).
 The last column shows the p-value from the independent-samples T-Test of each predictor by the dependent variable.
 
 
@@ -347,16 +366,17 @@ output_2 = output_2 %>% cbind(ttest_list) %>%
 colnames(output_2) = c("Mean", "SD", "Mean", "SD", "T-Test p-value")
 
 output_2 %>%
-  kable(caption = "Table 3. Cross tabulations of the dependent variable and continuous predictors") %>%
+  kable(caption = "Table 4. Cross tabulations of the dependent variable and continuous predictors") %>%
   add_header_above(c(" ", "No alcohol involved" = 2, "Alcohol involved" = 2, "Independent Samples T-Test" = 1)) %>%
   kable_classic(full_width=FALSE, html_font="Cambria")
 ```
 
+<br />
 The table shows that both independent-samples T-tests produced a p-value greater than 0.05, meaning that the two continuous variables themselves are not significantly correlated with the dependent variable.
 
 ## Checking for multi-collinearity among the predictors
 
-This section tests whether and how the predictors are inter-correlated with each other, although logistic regressions generally do not require for non-collinearity. Table 4. shows the correlation coefficient ($r$) between each pair of predictors, and Table 5.
+This section tests whether and how the predictors are inter-correlated with each other, although logistic regressions generally do not require for non-collinearity. Table 5. shows the correlation coefficient ($r$) between each pair of predictors, and Table 6.
 presents the p-values.
 
 ```{r check-collin, results="asis"}
@@ -382,7 +402,7 @@ rownames(r_matrix) = var_names
 rownames(p_matrix) = var_names
 
 r_matrix %>%
-  kable(caption = "Table 4. Correlation matrix of predictors") %>%
+  kable(caption = "Table 5. Correlation matrix of predictors") %>%
   kable_classic(html_font="Cambria")
 
 ```
@@ -390,12 +410,12 @@ r_matrix %>%
 ```{r check-collin-p, results="asis"}
 
 p_matrix %>%
-  kable(caption = "Table 5. Correlation matrix (p-values) of predictors") %>%
+  kable(caption = "Table 6. Correlation matrix (p-values) of predictors") %>%
   kable_classic(html_font="Cambria")
 ```
 
-The tables above shows that there is some collinearity between some predictors.
-However, the correlations among the predictors are very weak.
+<br />
+The tables above shows that there is some collinearity between some predictors. However, the correlations among the predictors are very weak.
 
 # Logistic Regression Results
 
@@ -448,12 +468,13 @@ make_coef_table = function(coefficient_df, caption) {
 }
 
 make_coef_table(base_coefficient, 
-                "Table 6. Coefficient estimates for the base model (AIC = " %>% 
+                "Table 7. Coefficient estimates for the base model (AIC = " %>% 
                   paste0(aic) %>% paste0(")"))
 
 ```
 
-As shown on Table 6., the model produced an overall AIC of 18,359.69. Seven out of the nine predictors turned out significant (with p-values smaller than 0.05). Two variables, namely phone usage and the percentage of residents with a bachelor's degree or higher in the CBG, were not significant. Let us explain the significant model coefficients through *odd ratios*:
+<br />
+As shown on Table 7., the model produced an overall AIC of 18,359.69. Seven out of the nine predictors turned out significant (with p-values smaller than 0.05). Two variables, namely phone usage and the percentage of residents with a bachelor's degree or higher in the CBG, were not significant. Let us explain the significant model coefficients through *odd ratios*:
 
 -   The odd ratio for the predictor “Involved fatality or major injury” is 2.26, meaning that compared to accidents with no fatality nor major injury, if the accidents were with fatality or major injury, then the odds of the crash being associated with drinking goes up by 126% (2.26 minus 1).
 
@@ -469,6 +490,7 @@ As shown on Table 6., the model produced an overall AIC of 18,359.69. Seven out 
 
 -   Although the coefficient for median household income is significant, it is almost negligibly small. As the median household income of the CBG where the crash took place goes up by 1,000 dollars, the odds of it being associated with drinking barely changes.
 
+## Determining the cut-off value
 
 ```{r sens_spec_cut_off_table, results="hide"}
 
@@ -507,11 +529,10 @@ colnames(cut_off_df) = c("Cut-off value", "Sensitivity", "Specificity", "Misclas
 
 ```
 
-## Determining the cut-off value
 
-How do we determine the cutoffs? In Fig. 1., we plotted the probability density of the predicted probabilities by observed outcome. We found that for most cases, the model predicted a very low probability for drinking involvement, and that the distinction between two observed categories were not clear-cut. 
+How do we determine the cutoffs? In Fig. 2., we plotted the probability density of the predicted probabilities by observed outcome. We found that for most cases, the model predicted a very low probability for drinking involvement, and that the distinction between two observed categories were not clear-cut. 
 
-```{r prep-for-cutoff-viz, fig.cap="Fig. 1. Distribution of predicted probabilities by observed outcome (base model)"}
+```{r prep-for-cutoff-viz, fig.cap="Fig. 2. Distribution of predicted probabilities by observed outcome (base model)", fig.align="center"}
 
 # Distribution of predicted probabilities by observed outcome
 
@@ -530,7 +551,7 @@ fit_df %>%
   theme(legend.position = "none")
 
 ```
-On Table 5., we calculated the sensitivity, specificity, and misclassification rate corresponding to a series of cut-off values. As the cut-off values increase, the misclassification rate goes continuously down. In the table, the cut-off value associated with the highest misclassification rate is 0.02, and the lowest 0.50. 
+On Table 8., we calculated the sensitivity, specificity, and misclassification rate corresponding to a series of cut-off values. As the cut-off values increase, the misclassification rate goes continuously down. In the table, the cut-off value associated with the highest misclassification rate is 0.02, and the lowest 0.50. 
 
 However, this does not mean that we should aim for the lowest misclassification rate possible. Recall that the observed “True” cases only make up about 5.7% of all the data (see Table 1.), and as one raise the cut-off value, the misclassification rate gradually approximates this percentage. If you predict *all* cases to be “False”, then you get a misclassification rate of 0.057, which is lowest on Table 5, but such predictions also become worthless. Therefore, we need to consider the combination of sensitivity and specificity to determine the best cut-off value.
 
@@ -538,14 +559,15 @@ However, this does not mean that we should aim for the lowest misclassification 
 ```{r cut_off_table_present, results="asis"}
 
 cut_off_df %>%
-  kable(caption = "Table 7. Sensitivities, specificities, and misclassification rates corresponding to a series of cutoffs") %>%
+  kable(caption = "Table 8. Sensitivities, specificities, and misclassification rates corresponding to a series of cutoffs") %>%
   kable_classic(full_width=FALSE, html_font="Cambria")
 
 ```
 
-In Fig. 2., we plotted the ROC curve for the base model. The curve spans above the 45-degree line, meaning that the model is not totally worthless. The AUC of the curve is 0.6399, meaning that, given two random cases, the observed “True” will have a 64% chance of being predicted a higher probability than the observed “False”.
+<br />
+In Fig. 3., we plotted the ROC curve for the base model. The curve spans above the 45-degree line, meaning that the model is not totally worthless. The AUC of the curve is 0.6399, meaning that, given two random cases, the observed “True” will have a 64% chance of being predicted a higher probability than the observed “False”.
 
-```{r roc-curve, fig.cap="Fig. 2. ROC curve and AUC of the base model"}
+```{r roc-curve, fig.cap="Fig. 2. ROC curve and AUC of the base model", fig.align="center"}
 
 library(plotROC)
 
@@ -636,12 +658,13 @@ bi_only_coefficients = bi_only_summary$coefficients %>% as.data.frame()
 
 # Output kable
 make_coef_table(bi_only_coefficients,
-                "Table 8. Coefficient estimates for the second model (AIC = " %>% 
+                "Table 9. Coefficient estimates for the second model (AIC = " %>% 
                   paste0(aic) %>% paste0(")"))
 
 ```
 
-Table 8. summarizes the model outputs. All the predictors that were significant in the base model were still significant in this model, and the predictor of phone usage remained insignificant. The AIC for this model is 18,360, which is almost the same as the base model, meaning that the two models are fairly equal in their goodness of fit.
+<br />
+Table 9. summarizes the model outputs. All the predictors that were significant in the base model were still significant in this model, and the predictor of phone usage remained insignificant. The AIC for this model is 18,360, which is almost the same as the base model, meaning that the two models are fairly equal in their goodness of fit.
 
 # Discussion
 
@@ -667,5 +690,5 @@ The model coefficients were not very surprising. For example, the model showed t
 
 Overall, our regression models did not perform very well, with an AUC of only 65%. We would not say that the logistic regression was inappropriate for our purpose: although the percentage of “Trues” for the dependent variable is small, the aggregate number of “True” cases was 2,485, which was a decent amount for the Maximum Likelihood Estimation method. 
 
-Rather, it could our *predictors* that posed the greatest limitation, as they do not possess enough explanation power. With ideal predictors, the predicted probabilities should differentiate between by the observed categories, namely, the observed “True” cases should generally be predicted to have high probabilities, and the observed “False” cases should be predicted to have low probabilities. In our case, however, Fig. 1. showed that the predicted probabilities hardly differentiate by the two observed categories. Therefore, we could not reach high sensitivity and specificity no matter what cut-off value we selected. It is likely that the methods to predict rare events as suggested by Paul Allison might not help in our case, if no better predictors are available.
+Rather, it could our *predictors* that posed the greatest limitation, as they do not possess enough explanation power. With ideal predictors, the predicted probabilities should differentiate between by the observed categories, namely, the observed “True” cases should generally be predicted to have high probabilities, and the observed “False” cases should be predicted to have low probabilities. In our case, however, Fig. 2. showed that the predicted probabilities hardly differentiate by the two observed categories. Therefore, we could not reach high sensitivity and specificity no matter what cut-off value we selected. It is likely that the methods to predict rare events as suggested by Paul Allison might not help in our case, if no better predictors are available.
 
